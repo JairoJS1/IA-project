@@ -5,6 +5,8 @@ const exceljs = require('exceljs')
 const moment = require('moment')
 const express = require('express')
 const cors = require('cors')
+let mensage = '';
+let conversaciones = [];
 // const speech = require('@google-cloud/speech');
 // const clientSound = new speech.SpeechClient();
 
@@ -78,10 +80,50 @@ const withOutSession = () => {
 
 //Esta funcion escucha cuando entra un mesnaje nuevo
 const listenMessage = () => {
+
+
   client.on('message', msg => {
     const { from, to, body } = msg
+    mensage += body;
+    if (conversaciones.length == 0) {
+      conversaciones.push({
+        number: from,
+        message: body
+      })
+    } else {
+      let exiten = false;
+      for (let a = 0; a < conversaciones.length; a++) {
+        if (conversaciones[a].number == from) {
+          conversaciones[a].message += ', ' + body
+          exiten = true;
+          break;
+        }
+      }
+      if (!exiten) {
+        conversaciones.push({
+          number: from,
+          message: body
+        })
+      }
+      for (let a = 0; a < conversaciones.length; a++) {
+        if (conversaciones[a].number == from) {
+          mensaje = conversaciones[a].message;
+          break;
+        }
+      }
+    }
 
     switch (body.toLowerCase()) {
+
+      case 'hola':
+        let message = 'h';
+        console.log((message + body), body, mensage);
+        sendMessage(from, 'Menú \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir')
+        mensage += ',' + 1;
+        break;
+      case 'hola, 1':
+
+        break;
       case 'quiero_info':
         sendMessage(from, 'Escribeme')
         break
