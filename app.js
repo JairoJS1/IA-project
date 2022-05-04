@@ -7,6 +7,7 @@ const express = require('express')
 const cors = require('cors')
 let mensage = '';
 let conversaciones = [];
+let usuarioSeleccionado = 0;
 // const speech = require('@google-cloud/speech');
 // const clientSound = new speech.SpeechClient();
 
@@ -107,22 +108,22 @@ const listenMessage = () => {
       }
       for (let a = 0; a < conversaciones.length; a++) {
         if (conversaciones[a].number == from) {
+          mensaje = '';
           mensaje = conversaciones[a].message;
+          usuarioSeleccionado = a;
           break;
         }
       }
     }
-
-    switch (body.toLowerCase()) {
+console.log(mensage)
+    switch (mensaje) {
 
       case 'hola':
-        let message = 'h';
-        console.log((message + body), body, mensage);
         sendMessage(from, 'Menú \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir')
         mensage += ',' + 1;
         break;
       case 'hola, 1':
-
+        sendMessage(from, 'Ubicados en algun lugar')
         break;
       case 'quiero_info':
         sendMessage(from, 'Escribeme')
@@ -134,6 +135,10 @@ const listenMessage = () => {
         sendMessage(from, 'Bienvenido !!')
         sendMedia(from, 'angular.png')
         break
+        default:
+        sendMessage(from, 'No entiendo')
+        conversaciones[usuarioSeleccionado].message = ''; 
+        break;
     }
     saveHistorial(from, body)
     console.log(from, to, body)
