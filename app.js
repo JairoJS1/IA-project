@@ -5,9 +5,9 @@ const exceljs = require('exceljs')
 const moment = require('moment')
 const express = require('express')
 const cors = require('cors')
-let mensage = '';
-let conversaciones = [];
-let usuarioSeleccionado = 0;
+let mensaje = ''
+let conversaciones = []
+let usuarioSeleccionado = 0
 // const speech = require('@google-cloud/speech');
 // const clientSound = new speech.SpeechClient();
 
@@ -81,65 +81,88 @@ const withOutSession = () => {
 
 //Esta funcion escucha cuando entra un mesnaje nuevo
 const listenMessage = () => {
-
-
-  client.on('message', msg => {
+  client.on('message', (msg) => {
     const { from, to, body } = msg
-    mensage += body;
     if (conversaciones.length == 0) {
       conversaciones.push({
         number: from,
-        message: body
+        message: [body],
       })
+
     } else {
-      let exiten = false;
+      let exiten = false
       for (let a = 0; a < conversaciones.length; a++) {
         if (conversaciones[a].number == from) {
-          conversaciones[a].message += ', ' + body
-          exiten = true;
-          break;
+          conversaciones[a].message.push(body)
+          exiten = true
+          break
         }
       }
       if (!exiten) {
         conversaciones.push({
           number: from,
-          message: body
+          message: [body],
         })
       }
-      for (let a = 0; a < conversaciones.length; a++) {
-        if (conversaciones[a].number == from) {
-          mensaje = '';
-          mensaje = conversaciones[a].message;
-          usuarioSeleccionado = a;
-          break;
-        }
+    }
+    for (let a = 0; a < conversaciones.length; a++) {
+      if (conversaciones[a].number == from) {
+        mensaje = conversaciones[a].message
+        usuarioSeleccionado = a
+        break
       }
     }
-console.log(mensage)
-    switch (mensaje) {
-
-      case 'hola':
-        sendMessage(from, 'Menú \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir')
-        mensage += ',' + 1;
-        break;
-      case 'hola, 1':
-        sendMessage(from, 'Ubicados en algun lugar')
-        break;
-      case 'quiero_info':
-        sendMessage(from, 'Escribeme')
-        break
-      case 'adios':
-        sendMessage(from, 'Cuidate')
-        break
-      case 'hola':
-        sendMessage(from, 'Bienvenido !!')
-        sendMedia(from, 'angular.png')
-        break
-        default:
-        sendMessage(from, 'No entiendo')
-        conversaciones[usuarioSeleccionado].message = ''; 
-        break;
+    console.log('conversaciones:: ', conversaciones)
+    console.log('mensaje:: ', mensaje)
+    if (mensaje[mensaje.length - 1] == '10') {
+      conversaciones[usuarioSeleccionado].message = []
     }
+console.log(mensaje[0])
+console.log(mensaje[0].length)
+    switch (mensaje[0].toLowerCase()) {
+      case 'hola':
+        if (mensaje[1] != undefined) {
+          switch (mensaje[1].toLowerCase()) {
+            case '1':
+              sendMessage(from, 'Ubicados en algun lugar')
+              break
+            case '2':
+              sendMessage(from, 'Escribeme')
+              break
+            default:
+              conversaciones[usuarioSeleccionado].message.pop()
+              break
+          }
+        } else {
+          sendMessage(
+            from,
+            'Menú \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir',
+          )
+        }
+
+        break
+      default:
+        conversaciones[usuarioSeleccionado].message.pop()
+        break
+    }
+
+    // case 'hola, 1':
+    //   sendMessage(from, 'Ubicados en algun lugar')
+    //   break;
+    // case 'quiero_info':
+    //   sendMessage(from, 'Escribeme')
+    //   break
+    // case 'adios':
+    //   sendMessage(from, 'Cuidate')
+    //   break
+    // case 'hola':
+    //   sendMessage(from, 'Bienvenido !!')
+    //   sendMedia(from, 'angular.png')
+    //   break
+    //   default:
+    //   sendMessage(from, 'No entiendo')
+    //   conversaciones[usuarioSeleccionado].message = '';
+    //   break;
     saveHistorial(from, body)
     console.log(from, to, body)
   })
