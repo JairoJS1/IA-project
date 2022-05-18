@@ -87,12 +87,23 @@ const listenMessage = () => {
       conversaciones.push({
         number: from,
         message: [body],
+        ultimoRecibido: new Date()
       })
     } else {
       let exiten = false
       for (let a = 0; a < conversaciones.length; a++) {
         if (conversaciones[a].number == from) {
-          conversaciones[a].message.push(body)
+          if(RangoValido(conversaciones[a].ultimoRecibido,new Date())){
+            conversaciones[a].message.push(body)
+            conversaciones[a].ultimoRecibido=new Date()
+            console.log('Rango de fechas valido')
+          }else{
+            conversaciones[a].message=[]
+            conversaciones[a].ultimoRecibido=new Date()
+            conversaciones[a].message.push(body)
+            console.log('Rango de fechas Invalido - message reset')
+          }
+
           exiten = true
           break
         }
@@ -101,12 +112,12 @@ const listenMessage = () => {
         conversaciones.push({
           number: from,
           message: [body],
+          ultimoRecibido: new Date()
         })
       }
     }
     for (let a = 0; a < conversaciones.length; a++) {
       if (conversaciones[a].number == from) {
-        //agregar un timer, para limpiar la
         mensaje = conversaciones[a].message
         usuarioSeleccionado = a
         break
@@ -119,40 +130,43 @@ const listenMessage = () => {
     console.log(mensaje)
     switch (mensaje[0].toLowerCase()) {
       default:
-        if (mensaje[1] != undefined) {
+        console.log('En default')
+        if (mensaje[1]  != undefined) {
+          console.log('Ejecutando flujo normalizado')
           switch (mensaje[1].toLowerCase()) {
             case '1':
               conversaciones[usuarioSeleccionado].message.pop()
               sendMessage(from, 'Ubicados en algun lugar')
               break
             case '2':
-              sendMessage('50259345499@c.us',`Comunicate con el número: ${from.replace('@c.us','')}` )
+              sendMessage(from, 'En breve uno de nuestros asesores se comunicara contigo 😃')
+              sendMessage('50259345499@c.us', `Comunicate con el número: ${from.replace('@c.us', '')}`)
               //
               break
             case '3':
               if (mensaje[2] != undefined) {
-                if(mensaje[3]!=undefined){
-                  switch(mensaje[3]){
+                if (mensaje[3] != undefined) {
+                  switch (mensaje[3]) {
                     case '1':
-                      sendMessage(from,'Agregado al carrito :\\)')
-                    break;
+                      sendMessage(from, 'Agregado al carrito :\\)')
+                      break;
                     case '2':
-                      sendMessage(from,'Finaliza la compra :\\)')
-                    break;
+                      sendMessage(from, 'Finaliza la compra :\\)')
+                      break;
                     case '3':
                       conversaciones[usuarioSeleccionado].message.pop()
                       conversaciones[usuarioSeleccionado].message.pop()
-                      sendMessage(from,'REGRESA :\\)')
-                    break;
+                      sendMessage(from, 'REGRESA :\\)')
+                      break;
                   }
-                }else{
+                } else {
                   switch (mensaje[2]) {
                     case '1':
-                      setTimeout(()=>{
+                      setTimeout(() => {
                         sendMessage(from, 'Selecciono el producto 1')
-                        sendMessage(from,'PRECIO')
-                        sendMessage(from,'1. Agregar al carrito\n2. Finalizar Compra\n3. Regresar')
-                      },1000)
+                        sendMessage(from, 'PRECIO')
+                        sendMessage(from, '1. Agregar al carrito\n2. Finalizar Compra\n3. Regresar')
+                      }, 1000)
                       sendMedia(from, 'angular.png')
                       //se tendria que eliminar el ultimo mensaje
                       //agregar la compra
@@ -168,8 +182,8 @@ const listenMessage = () => {
                     case '4':
                       conversaciones[usuarioSeleccionado].message.pop()
                       conversaciones[usuarioSeleccionado].message.pop()
-                      menuPrincipal()
-  
+                      menuPrincipal(from)
+
                       break
                     default:
                       sendMessage(from, 'Opcion ingresada no se encuentra')
@@ -198,7 +212,8 @@ const listenMessage = () => {
               break
           }
         } else {
-          menuPrincipal()
+          console.log('Llamando a menuPrincipal')
+          menuPrincipal(from)
         }
 
         break
@@ -229,8 +244,9 @@ const listenMessage = () => {
   })
 }
 
-const menuPrincipal = ()=>{
-  sendMessage(from,'Menú \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir')
+function menuPrincipal(destination){
+  sendMessage(destination, 'Hola bienvenido a nuestro Chat Bot🤖 \n A continuacion te mostramos nuestro Menú 😄')
+  sendMessage(destination, 'Envianos el numero de la opcion que desees 😊 \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir')
 }
 
 const sendMessage = (to, message) => {
@@ -239,7 +255,7 @@ const sendMessage = (to, message) => {
 
 const sendMedia = (to, file) => {
   const mediaFile = MessageMedia.fromFilePath(`./mediaSend/${file}`)
-  
+
   client.sendMessage(to, mediaFile)
 }
 
@@ -289,3 +305,17 @@ fs.existsSync(SESSION_FILE_PATH) ? withSession() : withOutSession()
 app.listen(9000, () => {
   console.log('API ESTA ARRIBA')
 })
+
+function RangoValido(dateLast, dateNew) {
+  var difference = Math.abs(dateNew - dateLast);
+  mins = difference / (1000 * 60)
+  console.log('Verificando Fechas')
+  if (mins <= 1) {
+    console.log('Fecha Valida')
+    return true;
+  } else {
+
+    console.log('Fecha Invalida')
+    return false;
+  }
+}
