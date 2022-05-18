@@ -88,7 +88,6 @@ const listenMessage = () => {
         number: from,
         message: [body],
       })
-
     } else {
       let exiten = false
       for (let a = 0; a < conversaciones.length; a++) {
@@ -107,43 +106,105 @@ const listenMessage = () => {
     }
     for (let a = 0; a < conversaciones.length; a++) {
       if (conversaciones[a].number == from) {
+        //agregar un timer, para limpiar la
         mensaje = conversaciones[a].message
         usuarioSeleccionado = a
         break
       }
     }
-    console.log('conversaciones:: ', conversaciones)
-    console.log('mensaje:: ', mensaje)
     if (mensaje[mensaje.length - 1] == '10') {
       conversaciones[usuarioSeleccionado].message = []
+      mensaje = []
     }
-console.log(mensaje[0])
-console.log(mensaje[0].length)
+    console.log(mensaje)
     switch (mensaje[0].toLowerCase()) {
-      case 'hola':
+      default:
         if (mensaje[1] != undefined) {
           switch (mensaje[1].toLowerCase()) {
             case '1':
+              conversaciones[usuarioSeleccionado].message.pop()
               sendMessage(from, 'Ubicados en algun lugar')
               break
             case '2':
-              sendMessage(from, 'Escribeme')
+              sendMessage('50259345499@c.us',`Comunicate con el número: ${from.replace('@c.us','')}` )
+              //
+              break
+            case '3':
+              if (mensaje[2] != undefined) {
+                if(mensaje[3]!=undefined){
+                  switch(mensaje[3]){
+                    case '1':
+                      sendMessage(from,'Agregado al carrito :\\)')
+                    break;
+                    case '2':
+                      sendMessage(from,'Finaliza la compra :\\)')
+                    break;
+                    case '3':
+                      conversaciones[usuarioSeleccionado].message.pop()
+                      conversaciones[usuarioSeleccionado].message.pop()
+                      sendMessage(from,'REGRESA :\\)')
+                    break;
+                  }
+                }else{
+                  switch (mensaje[2]) {
+                    case '1':
+                      setTimeout(()=>{
+                        sendMessage(from, 'Selecciono el producto 1')
+                        sendMessage(from,'PRECIO')
+                        sendMessage(from,'1. Agregar al carrito\n2. Finalizar Compra\n3. Regresar')
+                      },1000)
+                      sendMedia(from, 'angular.png')
+                      //se tendria que eliminar el ultimo mensaje
+                      //agregar la compra
+                      //mostrar el menu
+                      //mostrar finalizar
+                      break
+                    case '2':
+                      sendMessage(from, 'Selecciono el producto 2')
+                      break
+                    case '3':
+                      sendMessage(from, 'Selecciono el producto 3')
+                      break
+                    case '4':
+                      conversaciones[usuarioSeleccionado].message.pop()
+                      conversaciones[usuarioSeleccionado].message.pop()
+                      menuPrincipal()
+  
+                      break
+                    default:
+                      sendMessage(from, 'Opcion ingresada no se encuentra')
+                      sendMessage(
+                        from,
+                        'Menú \n 1. PRODUCTO 1 \n 2. PRODUCTO 2 \n 3. PRODUCTO 3 \n 4. Regresar',
+                      )
+                      conversaciones[usuarioSeleccionado].message.pop()
+                      break
+                  }
+                }
+              } else {
+                sendMessage(
+                  from,
+                  'Menú \n 1. PRODUCTO 1 \n 2. PRODUCTO 2 \n 3. PRODUCTO 3 \n 4. Salir',
+                )
+              }
+              break
+            case '4':
+              sendMessage(from, 'Vuelve pronto :\\)')
+              conversaciones[usuarioSeleccionado].message = []
+              mensaje = []
               break
             default:
               conversaciones[usuarioSeleccionado].message.pop()
               break
           }
         } else {
-          sendMessage(
-            from,
-            'Menú \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir',
-          )
+          menuPrincipal()
         }
 
         break
-      default:
-        conversaciones[usuarioSeleccionado].message.pop()
-        break
+      // default:
+      //   conversaciones[usuarioSeleccionado].message.pop()
+      //   break
     }
 
     // case 'hola, 1':
@@ -168,13 +229,17 @@ console.log(mensaje[0].length)
   })
 }
 
+const menuPrincipal = ()=>{
+  sendMessage(from,'Menú \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir')
+}
+
 const sendMessage = (to, message) => {
   client.sendMessage(to, message)
 }
 
 const sendMedia = (to, file) => {
   const mediaFile = MessageMedia.fromFilePath(`./mediaSend/${file}`)
-
+  
   client.sendMessage(to, mediaFile)
 }
 
