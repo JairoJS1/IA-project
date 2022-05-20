@@ -8,6 +8,7 @@ const cors = require('cors')
 let mensaje = ''
 let conversaciones = []
 let usuarioSeleccionado = 0
+let NumeroFactura = 0;
 // const speech = require('@google-cloud/speech');
 // const clientSound = new speech.SpeechClient();
 
@@ -87,19 +88,20 @@ const listenMessage = () => {
       conversaciones.push({
         number: from,
         message: [body],
-        ultimoRecibido: new Date()
+        ultimoRecibido: new Date(),
+        carrito: []
       })
     } else {
       let exiten = false
       for (let a = 0; a < conversaciones.length; a++) {
         if (conversaciones[a].number == from) {
-          if(RangoValido(conversaciones[a].ultimoRecibido,new Date())){
+          if (RangoValido(conversaciones[a].ultimoRecibido, new Date())) {
             conversaciones[a].message.push(body)
-            conversaciones[a].ultimoRecibido=new Date()
+            conversaciones[a].ultimoRecibido = new Date()
             console.log('Rango de fechas valido')
-          }else{
-            conversaciones[a].message=[]
-            conversaciones[a].ultimoRecibido=new Date()
+          } else {
+            conversaciones[a].message = []
+            conversaciones[a].ultimoRecibido = new Date()
             conversaciones[a].message.push(body)
             console.log('Rango de fechas Invalido - message reset')
           }
@@ -112,7 +114,8 @@ const listenMessage = () => {
         conversaciones.push({
           number: from,
           message: [body],
-          ultimoRecibido: new Date()
+          ultimoRecibido: new Date(),
+          carrito: []
         })
       }
     }
@@ -131,7 +134,7 @@ const listenMessage = () => {
     switch (mensaje[0].toLowerCase()) {
       default:
         console.log('En default')
-        if (mensaje[1]  != undefined) {
+        if (mensaje[1] != undefined) {
           console.log('Ejecutando flujo normalizado')
           switch (mensaje[1].toLowerCase()) {
             case '1':
@@ -148,7 +151,50 @@ const listenMessage = () => {
                 if (mensaje[3] != undefined) {
                   switch (mensaje[3]) {
                     case '1':
-                      sendMessage(from, 'Agregado al carrito :\\)')
+                      if (mensaje[4] == undefined) {
+                        sendMessage(from, 'Agregado al carrito :\\)')
+                        console.log(mensaje[2])
+                        if (mensaje[2] == '1') {
+                          conversaciones[usuarioSeleccionado].carrito.push(['Producto 1', 100])
+                          console.log('Agregado al carrito ' + conversaciones[usuarioSeleccionado].carrito[conversaciones[usuarioSeleccionado].carrito.length - 1])
+                        } else if (mensaje[2] == '2') {
+                          conversaciones[usuarioSeleccionado].carrito.push(['Producto 2', 150])
+                          console.log('Agregado al carrito ' + conversaciones[usuarioSeleccionado].carrito[conversaciones[usuarioSeleccionado].carrito.length - 1])
+                        } else if (mensaje[2] == '3') {
+                          conversaciones[usuarioSeleccionado].carrito.push(['Producto 3', 300])
+                          console.log('Agregado al carrito ' + conversaciones[usuarioSeleccionado].carrito[conversaciones[usuarioSeleccionado].carrito.length - 1])
+                        }
+                        sendMessage(from, 'Por favor envie el numero de la opcion que deseas 😉 \n 1) Seguir Comprando 2) Finalizar Compra ')
+                      }
+                      else{
+                        switch (mensaje[4]) {
+                          case '1':
+                            conversaciones[usuarioSeleccionado].message.pop();
+                            conversaciones[usuarioSeleccionado].message.pop();
+                            conversaciones[usuarioSeleccionado].message.pop();
+                            sendMessage(
+                              from,
+                              'Menú \n 1. PRODUCTO 1 \n 2. PRODUCTO 2 \n 3. PRODUCTO 3 \n 4. Regresar',
+                            )
+                            break
+                          case '2':
+                            sendMessage(from, 'Finaliza la compra')
+                            let productos='';
+                            let price=0;
+                            console.log(conversaciones[usuarioSeleccionado].carrito)
+                            for(let i =0;i<conversaciones[usuarioSeleccionado].carrito.length;i++){
+                              productos += 'Nombre producto: ' + conversaciones[usuarioSeleccionado].carrito[i][0] + ' Precio Q.' + conversaciones[usuarioSeleccionado].carrito[i][1] + '\n';
+                              price+=conversaciones[usuarioSeleccionado].carrito[i][1];
+                            }
+                            NumeroFactura++
+                            sendMessage(from,'\n Recibo No. '+NumeroFactura+'\n'+ productos +'\n Total a Pagar: '+ price)
+                            break
+                          default:
+                            sendMessage(from, 'Opcion ingresada no se encuentra')
+                            sendMessage(from, 'Por favor envie el numero de la opcion que deseas 😉 \n 1) Seguir Comprando \n2) Finalizar Compra ')
+                            conversaciones[usuarioSeleccionado].message.pop()
+                        }
+                      }
                       break;
                     case '2':
                       sendMessage(from, 'Finaliza la compra :\\)')
@@ -174,10 +220,21 @@ const listenMessage = () => {
                       //mostrar finalizar
                       break
                     case '2':
-                      sendMessage(from, 'Selecciono el producto 2')
+                      setTimeout(() => {
+                        sendMessage(from, 'Selecciono el producto 2')
+                        sendMessage(from, 'PRECIO')
+                        sendMessage(from, '1. Agregar al carrito\n2. Finalizar Compra\n3. Regresar')
+                      }, 1000)
+                      sendMedia(from, 'angular.png')
+
                       break
                     case '3':
-                      sendMessage(from, 'Selecciono el producto 3')
+                      setTimeout(() => {
+                        sendMessage(from, 'Selecciono el producto 3')
+                        sendMessage(from, 'PRECIO')
+                        sendMessage(from, '1. Agregar al carrito\n2. Finalizar Compra\n3. Regresar')
+                      }, 1000)
+                      sendMedia(from, 'angular.png')
                       break
                     case '4':
                       conversaciones[usuarioSeleccionado].message.pop()
@@ -244,7 +301,7 @@ const listenMessage = () => {
   })
 }
 
-function menuPrincipal(destination){
+function menuPrincipal(destination) {
   sendMessage(destination, 'Hola bienvenido a nuestro Chat Bot🤖 \n A continuacion te mostramos nuestro Menú 😄')
   sendMessage(destination, 'Envianos el numero de la opcion que desees 😊 \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir')
 }
