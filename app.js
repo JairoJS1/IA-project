@@ -1,10 +1,54 @@
+// TODO: Replace with your app's Firebase project configuration
+const { initializeApp } = require('firebase/app')
+const { getDatabase, ref, set, child, get } = require('firebase/database')
+
+var firebaseConfig = {
+  apiKey: "AIzaSyC0O2-TVfAoXOhIF_nzO7sHa4-cgN4008Y",
+  authDomain: "chat-ia-9d3ea.firebaseapp.com",
+  databaseURL: "https://chat-ia-9d3ea-default-rtdb.firebaseio.com",
+  projectId: "chat-ia-9d3ea",
+  storageBucket: "chat-ia-9d3ea.appspot.com",
+  messagingSenderId: "906893768655",
+  appId: "1:906893768655:web:c7266c66267434e11ec4ba",
+  measurementId: "G-V386MPH98Q"
+};
+const fireIA = initializeApp(firebaseConfig);
+
+// Get a reference to the database service
+const database = getDatabase(fireIA);
+function AlmacenarCompra(from, products) {
+
+  set(ref(database, 'Pedidos/' + products.numeroPedido), {
+    products
+  });
+}
+let productosRecibidos;
+const dbRef = ref(getDatabase(fireIA));
+function ObtenerProductos() {
+  get(child(dbRef, 'Productos')).then((snapshot) => {
+    if (snapshot.exists()) {
+      productosRecibidos = snapshot.val();
+      console.log(productosRecibidos);
+    } else {
+      console.log("No data available");
+    }
+  }).catch((error) => {
+    console.error(error);
+    productosRecibidos = null;
+  });
+}
+
+
+
+
 const { Client, MessageMedia } = require('whatsapp-web.js')
 const qrcode = require('qrcode-terminal')
 const fs = require('fs')
 const exceljs = require('exceljs')
 const moment = require('moment')
 const express = require('express')
-const cors = require('cors')
+const cors = require('cors');
+const e = require('express');
 let mensaje = ''
 let conversaciones = []
 let usuarioSeleccionado = 0
@@ -53,6 +97,11 @@ const withSession = () => {
 
 //Esta funcion genera el QRCODE
 const withOutSession = () => {
+  ObtenerProductos()
+  setTimeout(() => {
+    Menu()
+  }, 3000)
+
   console.log('No hay session')
 
   client = new Client()
@@ -154,19 +203,21 @@ const listenMessage = () => {
                       if (mensaje[4] == undefined) {
                         sendMessage(from, 'Agregado al carrito :\\)')
                         console.log(mensaje[2])
-                        if (mensaje[2] == '1') {
-                          conversaciones[usuarioSeleccionado].carrito.push(['Producto 1', 100])
-                          console.log('Agregado al carrito ' + conversaciones[usuarioSeleccionado].carrito[conversaciones[usuarioSeleccionado].carrito.length - 1])
-                        } else if (mensaje[2] == '2') {
-                          conversaciones[usuarioSeleccionado].carrito.push(['Producto 2', 150])
-                          console.log('Agregado al carrito ' + conversaciones[usuarioSeleccionado].carrito[conversaciones[usuarioSeleccionado].carrito.length - 1])
-                        } else if (mensaje[2] == '3') {
-                          conversaciones[usuarioSeleccionado].carrito.push(['Producto 3', 300])
-                          console.log('Agregado al carrito ' + conversaciones[usuarioSeleccionado].carrito[conversaciones[usuarioSeleccionado].carrito.length - 1])
+
+                        let pos = parseInt(mensaje[2]) - 1;
+                        let producTemp = productosRecibidos[pos].descripcion
+                        let priceTemp = productosRecibidos[pos].precio
+                        if(conversaciones[usuarioSeleccionado].carrito[pos]== undefined){
+                          conversaciones[usuarioSeleccionado].carrito[pos]=[producTemp, priceTemp,1]
+                        }else{
+                          let a=conversaciones[usuarioSeleccionado].carrito[pos][2]
+                          conversaciones[usuarioSeleccionado].carrito[pos]=[producTemp, priceTemp,a+1]
                         }
+                        console.log('Agregado al carrito ' + conversaciones[usuarioSeleccionado].carrito[pos])
+
                         sendMessage(from, 'Por favor envie el numero de la opcion que deseas 😉 \n 1) Seguir Comprando 2) Finalizar Compra ')
                       }
-                      else{
+                      else {
                         switch (mensaje[4]) {
                           case '1':
                             conversaciones[usuarioSeleccionado].message.pop();
@@ -174,20 +225,63 @@ const listenMessage = () => {
                             conversaciones[usuarioSeleccionado].message.pop();
                             sendMessage(
                               from,
-                              'Menú \n 1. PRODUCTO 1 \n 2. PRODUCTO 2 \n 3. PRODUCTO 3 \n 4. Regresar',
+                              Menu(),
                             )
                             break
                           case '2':
                             sendMessage(from, 'Finaliza la compra')
-                            let productos='';
-                            let price=0;
-                            console.log(conversaciones[usuarioSeleccionado].carrito)
-                            for(let i =0;i<conversaciones[usuarioSeleccionado].carrito.length;i++){
-                              productos += 'Nombre producto: ' + conversaciones[usuarioSeleccionado].carrito[i][0] + ' Precio Q.' + conversaciones[usuarioSeleccionado].carrito[i][1] + '\n';
-                              price+=conversaciones[usuarioSeleccionado].carrito[i][1];
+                            
+                            let producto = {
+                              descripcion: '',
+                              precio: '',
+                              cantidad: ''
                             }
+                            let pedido = {
+                              numeroPedido: '',
+                              telefonoCliente: '',
+                              nombreCliente: '',
+                              direccion: '',
+                              fechaPedido: '',
+                              horaPedido: '',
+                              productos: []
+                            }
+                            let productos = '';
+                            let price = 0;
+                            console.log(conversaciones[usuarioSeleccionado].carrito)
+                            for (let i = 0; i < conversaciones[usuarioSeleccionado].carrito.length; i++) {
+                              console.log('Corre for')
+                              if(conversaciones[usuarioSeleccionado].carrito[i]!= undefined){
+                                producto.descripcion= conversaciones[usuarioSeleccionado].carrito[i][0]
+                                producto.precio= conversaciones[usuarioSeleccionado].carrito[i][1]
+                                producto.cantidad= conversaciones[usuarioSeleccionado].carrito[i][2]
+                                console.log(producto)
+                                productos += conversaciones[usuarioSeleccionado].carrito[i][2]+'Uni. Descripción: ' + conversaciones[usuarioSeleccionado].carrito[i][0] + ' Precio Q.' + conversaciones[usuarioSeleccionado].carrito[i][1]*conversaciones[usuarioSeleccionado].carrito[i][2] + '\n';
+                                price += conversaciones[usuarioSeleccionado].carrito[i][1];
+                               
+                                pedido.productos[i]={
+                                  descripcion: producto.descripcion,
+                                  precio: producto.precio,
+                                  cantidad: producto.cantidad
+                                }
+                                console.log(pedido)
+                              } 
+                              console.log('FIN FOR') 
+                              console.log('Almaceno el producto')
+                            }
+                            console.log('Salio de Iterar')
+                            pedido.numeroPedido=NumeroFactura;
+                            pedido.fechaPedido= new Date().toDateString()
+                            pedido.horaPedido=new Date().toTimeString()
+                            pedido.telefonoCliente=from.replace('@c.us', '')
                             NumeroFactura++
-                            sendMessage(from,'\n Recibo No. '+NumeroFactura+'\n'+ productos +'\n Total a Pagar: '+ price)
+                            try {
+                              
+                              AlmacenarCompra(from, pedido)
+                              console.log('database active')
+                            } catch (err) {
+                              console.log(err)
+                            }
+                            sendMessage(from, '\n Recibo No. ' + NumeroFactura + '\n' + productos )
                             break
                           default:
                             sendMessage(from, 'Opcion ingresada no se encuentra')
@@ -196,66 +290,58 @@ const listenMessage = () => {
                         }
                       }
                       break;
+
                     case '2':
-                      sendMessage(from, 'Finaliza la compra :\\)')
-                      break;
-                    case '3':
+                      conversaciones[usuarioSeleccionado].message.pop()
                       conversaciones[usuarioSeleccionado].message.pop()
                       conversaciones[usuarioSeleccionado].message.pop()
                       sendMessage(from, 'REGRESA :\\)')
                       break;
+                    default:
+                      conversaciones[usuarioSeleccionado].message.pop()
+                      Menu()
+
                   }
                 } else {
-                  switch (mensaje[2]) {
-                    case '1':
-                      setTimeout(() => {
-                        sendMessage(from, 'Selecciono el producto 1')
-                        sendMessage(from, 'PRECIO')
-                        sendMessage(from, '1. Agregar al carrito\n2. Finalizar Compra\n3. Regresar')
-                      }, 1000)
-                      sendMedia(from, 'angular.png')
-                      //se tendria que eliminar el ultimo mensaje
-                      //agregar la compra
-                      //mostrar el menu
-                      //mostrar finalizar
-                      break
-                    case '2':
-                      setTimeout(() => {
-                        sendMessage(from, 'Selecciono el producto 2')
-                        sendMessage(from, 'PRECIO')
-                        sendMessage(from, '1. Agregar al carrito\n2. Finalizar Compra\n3. Regresar')
-                      }, 1000)
-                      sendMedia(from, 'angular.png')
+                  if (Number.isNaN(parseInt(mensaje[2]))) {
+                    sendMessage(from, 'Opcion ingresada no se encuentra')
+                    sendMessage(
+                      from,
+                      Menu(),
+                    )
+                    conversaciones[usuarioSeleccionado].message.pop()
+                  } else if (parseInt(mensaje[2])-1 == productosRecibidos.length) {
+                    sendMessage(from, 'Salir')
+                    sendMessage(
+                      from,
+                      Menu(),
+                    )
+                    conversaciones[usuarioSeleccionado].message.pop()
+                  } else if (parseInt(mensaje[2])-1 > productosRecibidos.length) {
+                    sendMessage(from, 'Opcion ingresada no se encuentra')
+                    sendMessage(
+                      from,
+                      Menu(),
+                    )
+                    conversaciones[usuarioSeleccionado].message.pop()
+                  } else {
+                    let pos = parseInt(mensaje[2]) - 1;
+                    let producTemp = productosRecibidos[pos].descripcion
+                    let priceTemp = productosRecibidos[pos].precio
 
-                      break
-                    case '3':
-                      setTimeout(() => {
-                        sendMessage(from, 'Selecciono el producto 3')
-                        sendMessage(from, 'PRECIO')
-                        sendMessage(from, '1. Agregar al carrito\n2. Finalizar Compra\n3. Regresar')
-                      }, 1000)
-                      sendMedia(from, 'angular.png')
-                      break
-                    case '4':
-                      conversaciones[usuarioSeleccionado].message.pop()
-                      conversaciones[usuarioSeleccionado].message.pop()
-                      menuPrincipal(from)
 
-                      break
-                    default:
-                      sendMessage(from, 'Opcion ingresada no se encuentra')
-                      sendMessage(
-                        from,
-                        'Menú \n 1. PRODUCTO 1 \n 2. PRODUCTO 2 \n 3. PRODUCTO 3 \n 4. Regresar',
-                      )
-                      conversaciones[usuarioSeleccionado].message.pop()
-                      break
+                    setTimeout(() => {
+                      sendMessage(from, 'Selecciono ' + producTemp)
+                      sendMessage(from, 'Precio ' + priceTemp)
+                      sendMessage(from, '1. Agregar al carrito\n2. Regresar')
+                    }, 1000)
+                    sendMedia(from, 'angular.png')
                   }
                 }
               } else {
                 sendMessage(
                   from,
-                  'Menú \n 1. PRODUCTO 1 \n 2. PRODUCTO 2 \n 3. PRODUCTO 3 \n 4. Salir',
+                  Menu(),
                 )
               }
               break
@@ -304,6 +390,18 @@ const listenMessage = () => {
 function menuPrincipal(destination) {
   sendMessage(destination, 'Hola bienvenido a nuestro Chat Bot🤖 \n A continuacion te mostramos nuestro Menú 😄')
   sendMessage(destination, 'Envianos el numero de la opcion que desees 😊 \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir')
+}
+function destroy(data){
+return data;
+}
+function Menu() {
+  let mensaje = 'Menú \n'
+  for (let i = 0; i < productosRecibidos.length; i++) {
+    mensaje += i + 1 + '. ' + productosRecibidos[i].descripcion + '\n'
+    console.log(productosRecibidos[i].descripcion)
+  }
+  mensaje += productosRecibidos.length + 1 + '. Salir'
+  return mensaje;
 }
 
 const sendMessage = (to, message) => {
