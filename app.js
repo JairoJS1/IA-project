@@ -23,6 +23,8 @@ function AlmacenarCompra(from, products) {
   });
 }
 let productosRecibidos;
+let producto;
+
 const dbRef = ref(getDatabase(fireIA));
 function ObtenerProductos() {
   get(child(dbRef, 'Productos')).then((snapshot) => {
@@ -187,13 +189,30 @@ const listenMessage = () => {
           console.log('Ejecutando flujo normalizado')
           switch (mensaje[1].toLowerCase()) {
             case '1':
-              conversaciones[usuarioSeleccionado].message.pop()
-              sendMessage(from, 'Ubicados en algun lugar')
+
+              if (mensaje[2] != undefined) {
+                switch (mensaje[2].toLowerCase()) {
+                  case '1':
+                    conversaciones[usuarioSeleccionado].message.pop()
+                    conversaciones[usuarioSeleccionado].message.pop()
+                    menuPrincipal(from);
+                    break
+                  default:
+                    sendMessage(from, 'Opcion ingresada no se encuentra')
+                    sendMessage(from, '🗺 Encuéntranos en: \n-Ciudad Quetzal: https://waze.com/ul/h9fxedgg70 \n-Granados: https://waze.com/ul/h9fxsu57wq \n 1) Regresar')
+                    conversaciones[usuarioSeleccionado].message.pop()
+                    break
+                }
+              } else {
+                sendMessage(from, '🗺 Encuéntranos en: \n-Ciudad Quetzal: https://waze.com/ul/h9fxedgg70 \n-Granados: https://waze.com/ul/h9fxsu57wq \n 1) Regresar');
+              }
               break
             case '2':
               sendMessage(from, 'En breve uno de nuestros asesores se comunicara contigo 😃')
-              sendMessage('50259345499@c.us', `Comunicate con el número: ${from.replace('@c.us', '')}`)
-              //
+              sendMessage(from, 'El chat se cerrará pero puedes escribirnos cuando desees 😉')
+              conversaciones[usuarioSeleccionado].message = []
+              mensaje = []
+              sendMessage('50249984139@c.us', `Comunicate con el número: ${from.replace('@c.us', '')}`)
               break
             case '3':
               if (mensaje[2] != undefined) {
@@ -201,17 +220,16 @@ const listenMessage = () => {
                   switch (mensaje[3]) {
                     case '1':
                       if (mensaje[4] == undefined) {
-                        sendMessage(from, 'Agregado al carrito :\\)')
                         console.log(mensaje[2])
 
                         let pos = parseInt(mensaje[2]) - 1;
                         let producTemp = productosRecibidos[pos].descripcion
                         let priceTemp = productosRecibidos[pos].precio
-                        if(conversaciones[usuarioSeleccionado].carrito[pos]== undefined){
-                          conversaciones[usuarioSeleccionado].carrito[pos]=[producTemp, priceTemp,1]
-                        }else{
-                          let a=conversaciones[usuarioSeleccionado].carrito[pos][2]
-                          conversaciones[usuarioSeleccionado].carrito[pos]=[producTemp, priceTemp,a+1]
+                        if (conversaciones[usuarioSeleccionado].carrito[pos] == undefined) {
+                          conversaciones[usuarioSeleccionado].carrito[pos] = [producTemp, priceTemp, 1]
+                        } else {
+                          let a = conversaciones[usuarioSeleccionado].carrito[pos][2]
+                          conversaciones[usuarioSeleccionado].carrito[pos] = [producTemp, priceTemp, a + 1]
                         }
                         console.log('Agregado al carrito ' + conversaciones[usuarioSeleccionado].carrito[pos])
 
@@ -229,8 +247,6 @@ const listenMessage = () => {
                             )
                             break
                           case '2':
-                            sendMessage(from, 'Finaliza la compra')
-                            
                             let producto = {
                               descripcion: '',
                               precio: '',
@@ -250,57 +266,100 @@ const listenMessage = () => {
                             console.log(conversaciones[usuarioSeleccionado].carrito)
                             for (let i = 0; i < conversaciones[usuarioSeleccionado].carrito.length; i++) {
                               console.log('Corre for')
-                              if(conversaciones[usuarioSeleccionado].carrito[i]!= undefined){
-                                producto.descripcion= conversaciones[usuarioSeleccionado].carrito[i][0]
-                                producto.precio= conversaciones[usuarioSeleccionado].carrito[i][1]
-                                producto.cantidad= conversaciones[usuarioSeleccionado].carrito[i][2]
+                              if (conversaciones[usuarioSeleccionado].carrito[i] != undefined) {
+                                producto.descripcion = conversaciones[usuarioSeleccionado].carrito[i][0]
+                                producto.precio = conversaciones[usuarioSeleccionado].carrito[i][1]
+                                producto.cantidad = conversaciones[usuarioSeleccionado].carrito[i][2]
                                 console.log(producto)
-                                productos += conversaciones[usuarioSeleccionado].carrito[i][2]+'Uni. Descripción: ' + conversaciones[usuarioSeleccionado].carrito[i][0] + ' Precio Q.' + conversaciones[usuarioSeleccionado].carrito[i][1]*conversaciones[usuarioSeleccionado].carrito[i][2] + '\n';
+                                productos += conversaciones[usuarioSeleccionado].carrito[i][2] + 'Uni. Descripción: ' + conversaciones[usuarioSeleccionado].carrito[i][0] + ' Precio Q.' + conversaciones[usuarioSeleccionado].carrito[i][1] * conversaciones[usuarioSeleccionado].carrito[i][2] + '\n';
                                 price += conversaciones[usuarioSeleccionado].carrito[i][1];
-                               
-                                pedido.productos[i]={
+                                pedido.productos[i] = {
                                   descripcion: producto.descripcion,
                                   precio: producto.precio,
                                   cantidad: producto.cantidad
                                 }
                                 console.log(pedido)
-                              } 
-                              console.log('FIN FOR') 
+                              }
+                              console.log('FIN FOR')
                               console.log('Almaceno el producto')
                             }
                             console.log('Salio de Iterar')
-                            pedido.numeroPedido=NumeroFactura;
-                            pedido.fechaPedido= new Date().toDateString()
-                            pedido.horaPedido=new Date().toTimeString()
-                            pedido.telefonoCliente=from.replace('@c.us', '')
+                            pedido.numeroPedido = NumeroFactura;
+                            pedido.fechaPedido = new Date().toDateString()
+                            pedido.horaPedido = new Date().toTimeString()
+                            pedido.telefonoCliente = from.replace('@c.us', '')
                             NumeroFactura++
                             try {
-                              
+
                               AlmacenarCompra(from, pedido)
                               console.log('database active')
                             } catch (err) {
                               console.log(err)
                             }
-                            sendMessage(from, '\n Recibo No. ' + NumeroFactura + '\n' + productos )
-                            break
+                            if (mensaje[5] == undefined) {
+                              sendMessage(from, '\n Recibo No. ' + NumeroFactura + '\n' + productos)
+                              sendMessage(from, 'El total a pagar por su orden sería de: Q.' + price)
+
+                              sendMessage(from, '¿Desea continuar al proceso de pago? \n 1)Si \n 2)No')
+                            } else {
+                              switch (mensaje[5]) {
+                                case '1':
+                                  if (mensaje[6] != undefined) {
+                                    switch (mensaje[6].toLowerCase()) {
+                                      case '1':
+                                        sendMessage(from, 'Listo, para continuar por favor completa las instrucciones en el siguiente link:'
+                                          + 'www.abc.com')
+                                        sendMessage(from, 'Listo, Muchas gracias por completar tu orden, trabajaremos para enviarla a la brevedad 😊 ')
+                                        conversaciones[usuarioSeleccionado].message = []
+                                        mensaje = []
+                                        break;
+                                      case '2':
+                                        sendMessage(from, 'Listo, tu orden será enviada a la brevedad, te agradeceremos mucho si puedes tener cambio para pagar tu orden 😊')
+                                        conversaciones[usuarioSeleccionado].message = []
+                                        mensaje = []
+                                        break;
+                                      default:
+                                        sendMessage(from, 'Listo tenemos tu orden Por favor escribe el número de la opción de método de pago que deseas utilizar. \n '
+                                          + '1)Pago con tarjeta de crédito \n 2)Pago contra entrega ')
+                                    }
+                                  } else {
+                                    sendMessage(from, 'Listo tenemos tu orden Por favor escribe el número de la opción de método de pago que deseas utilizar. \n '
+                                      + '1)Pago con tarjeta de crédito \n 2)Pago contra entrega ')
+                                  }
+                                  break;
+                                case '2':
+                                  sendMessage(from, 'Lamentamos muchos los inconvenientes que hayas tenido 😓 \n'
+                                    + 'Procederemos a cancelar la orden, pero puedes escribirnos cuando quieras para realizar tu pedido 😉')
+                                  conversaciones[usuarioSeleccionado].message = []
+                                  mensaje = []
+                                  break;
+                                default:
+                                  sendMessage(from, 'Opcion ingresada no se encuentra')
+                                  sendMessage(from, 'Listo tenemos tu orden Por favor escribe el número de la opción de método de pago que deseas utilizar. \n '
+                                    + '1)Pago con tarjeta de crédito \n 2)Pago contra entrega ')
+                                  conversaciones[usuarioSeleccionado].message.pop()
+                              }
+                            }
+                            break;
                           default:
                             sendMessage(from, 'Opcion ingresada no se encuentra')
                             sendMessage(from, 'Por favor envie el numero de la opcion que deseas 😉 \n 1) Seguir Comprando \n2) Finalizar Compra ')
                             conversaciones[usuarioSeleccionado].message.pop()
+                            break;
                         }
                       }
                       break;
-
                     case '2':
                       conversaciones[usuarioSeleccionado].message.pop()
                       conversaciones[usuarioSeleccionado].message.pop()
-                      conversaciones[usuarioSeleccionado].message.pop()
-                      sendMessage(from, 'REGRESA :\\)')
+                      sendMessage(
+                        from,
+                        Menu(),
+                      )
                       break;
                     default:
                       conversaciones[usuarioSeleccionado].message.pop()
-                      Menu()
-
+                      Menu();
                   }
                 } else {
                   if (Number.isNaN(parseInt(mensaje[2]))) {
@@ -310,14 +369,12 @@ const listenMessage = () => {
                       Menu(),
                     )
                     conversaciones[usuarioSeleccionado].message.pop()
-                  } else if (parseInt(mensaje[2])-1 == productosRecibidos.length) {
+                  } else if (parseInt(mensaje[2]) - 1 == productosRecibidos.length) {
                     sendMessage(from, 'Salir')
-                    sendMessage(
-                      from,
-                      Menu(),
-                    )
+                    menuPrincipal(from);
                     conversaciones[usuarioSeleccionado].message.pop()
-                  } else if (parseInt(mensaje[2])-1 > productosRecibidos.length) {
+                    conversaciones[usuarioSeleccionado].message.pop()
+                  } else if (parseInt(mensaje[2]) - 1 > productosRecibidos.length) {
                     sendMessage(from, 'Opcion ingresada no se encuentra')
                     sendMessage(
                       from,
@@ -329,13 +386,21 @@ const listenMessage = () => {
                     let producTemp = productosRecibidos[pos].descripcion
                     let priceTemp = productosRecibidos[pos].precio
 
-
+                    if (producTemp == 'Laptop ASUS') {
+                      producto = 'Churros.jpeg';
+                    } else if (producTemp == 'Laptop DELL') {
+                      producto = 'Flautas.jpeg';
+                    } else if (producTemp == 'Laptop APPLE') {
+                      producto = 'Hot dogs.jpeg';
+                    } else {
+                      producto = 'Pizza.jpeg';
+                    }
                     setTimeout(() => {
                       sendMessage(from, 'Selecciono ' + producTemp)
                       sendMessage(from, 'Precio ' + priceTemp)
                       sendMessage(from, '1. Agregar al carrito\n2. Regresar')
                     }, 1000)
-                    sendMedia(from, 'angular.png')
+                    sendMedia(from, producto)
                   }
                 }
               } else {
@@ -360,28 +425,8 @@ const listenMessage = () => {
         }
 
         break
-      // default:
-      //   conversaciones[usuarioSeleccionado].message.pop()
-      //   break
     }
 
-    // case 'hola, 1':
-    //   sendMessage(from, 'Ubicados en algun lugar')
-    //   break;
-    // case 'quiero_info':
-    //   sendMessage(from, 'Escribeme')
-    //   break
-    // case 'adios':
-    //   sendMessage(from, 'Cuidate')
-    //   break
-    // case 'hola':
-    //   sendMessage(from, 'Bienvenido !!')
-    //   sendMedia(from, 'angular.png')
-    //   break
-    //   default:
-    //   sendMessage(from, 'No entiendo')
-    //   conversaciones[usuarioSeleccionado].message = '';
-    //   break;
     saveHistorial(from, body)
     console.log(from, to, body)
   })
@@ -391,8 +436,8 @@ function menuPrincipal(destination) {
   sendMessage(destination, 'Hola bienvenido a nuestro Chat Bot🤖 \n A continuacion te mostramos nuestro Menú 😄')
   sendMessage(destination, 'Envianos el numero de la opcion que desees 😊 \n 1. Ubicaciones \n 2. Servicio al cliente \n 3. Realizar un pedido \n 4. Salir')
 }
-function destroy(data){
-return data;
+function destroy(data) {
+  return data;
 }
 function Menu() {
   let mensaje = 'Menú \n'
