@@ -266,8 +266,6 @@ const listenMessage = () => {
                             )
                             break
                           case '2':
-
-
                             if (mensaje[5] == undefined) {
                               sendMessage(from, 'Por favor ingresada tu Nombre')
                             }
@@ -330,7 +328,6 @@ const listenMessage = () => {
                                 } catch (err) {
                                   console.log(err)
                                 }
-                                sendMessage(from, '\n Recibo No. ' + NumeroFactura + '\n' + productos)
                                 if (mensaje[7] == undefined) {
                                   sendMessage(from, '\n Recibo No. ' + NumeroFactura + '\n' + productos)
                                   sendMessage(from, 'El total a pagar por su orden sería de: Q.' + price)
@@ -379,8 +376,8 @@ const listenMessage = () => {
                                 }
 
                               }
-                              break
                             }
+                            break;
                           default:
                             sendMessage(from, 'Opcion ingresada no se encuentra')
                             sendMessage(from, 'Por favor envie el numero de la opcion que deseas 😉 \n 1) Seguir Comprando \n2) Finalizar Compra ')
@@ -413,6 +410,7 @@ const listenMessage = () => {
                     sendMessage(from, 'Salir')
                     menuPrincipal(from);
                     conversaciones[usuarioSeleccionado].message.pop()
+                    conversaciones[usuarioSeleccionado].message.pop()
                     //conversaciones[usuarioSeleccionado].message.pop()  //Pendiente revision
                   } else if (parseInt(mensaje[2]) - 1 > productosRecibidos.length) {
                     sendMessage(from, 'Opcion ingresada no se encuentra')
@@ -426,14 +424,16 @@ const listenMessage = () => {
                     let producTemp = productosRecibidos[pos].descripcion
                     let priceTemp = productosRecibidos[pos].precio
 
-                    if (producTemp == 'Laptop ASUS') {
+                    if (producTemp == 'Churros') {
                       producto = 'Churros.jpeg';
-                    } else if (producTemp == 'Laptop DELL') {
+                    } else if (producTemp == 'Flautas') {
                       producto = 'Flautas.jpeg';
-                    } else if (producTemp == 'Laptop APPLE') {
+                    } else if (producTemp == 'Hot Dog') {
                       producto = 'Hot dogs.jpeg';
-                    } else {
+                    } else if(producTemp == 'Pizza Personal'){
                       producto = 'Pizza.jpeg';
+                    }else{
+                      producto = 'Tacos.jpeg';
                     }
                     setTimeout(() => {
                       sendMessage(from, 'Selecciono ' + producTemp)
