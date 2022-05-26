@@ -46,6 +46,7 @@ function ObtenerNoFactura() {
       NumeroFactura = snapshot.val();
       console.log(NumeroFactura);
     } else {
+      NumeroFactura=[]
       console.log("No data available");
     }
   }).catch((error) => {
