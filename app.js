@@ -407,7 +407,6 @@ const listenMessage = () => {
                     )
                     conversaciones[usuarioSeleccionado].message.pop()
                   } else if (parseInt(mensaje[2]) - 1 == productosRecibidos.length) {
-                    sendMessage(from, 'Salir')
                     menuPrincipal(from);
                     conversaciones[usuarioSeleccionado].message.pop()
                     conversaciones[usuarioSeleccionado].message.pop()
@@ -485,7 +484,7 @@ function Menu() {
     mensaje += i + 1 + '. ' + productosRecibidos[i].descripcion + '\n'
     console.log(productosRecibidos[i].descripcion)
   }
-  mensaje += productosRecibidos.length + 1 + '. Salir'
+  mensaje += productosRecibidos.length + 1 + '. Regresar'
   return mensaje;
 }
 
