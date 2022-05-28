@@ -46,7 +46,7 @@ function ObtenerNoFactura() {
       NumeroFactura = snapshot.val();
       console.log(NumeroFactura);
     } else {
-      NumeroFactura=[]
+      NumeroFactura = []
       console.log("No data available");
     }
   }).catch((error) => {
@@ -275,6 +275,7 @@ const listenMessage = () => {
                               }
                               else {
 
+
                                 let producto = {
                                   descripcion: '',
                                   precio: '',
@@ -316,20 +317,12 @@ const listenMessage = () => {
                                 pedido.nombreCliente = mensaje[5];
                                 pedido.direccion = mensaje[6]
                                 console.log('Salio de Iterar')
-                                pedido.numeroPedido = NumeroFactura;
                                 pedido.fechaPedido = new Date().toDateString()
                                 pedido.horaPedido = new Date().toTimeString()
                                 pedido.telefonoCliente = from.replace('@c.us', '')
-                                NumeroFactura++
-                                try {
 
-                                  AlmacenarCompra(from, pedido)
-                                  console.log('database active')
-                                } catch (err) {
-                                  console.log(err)
-                                }
                                 if (mensaje[7] == undefined) {
-                                  sendMessage(from, '\n Recibo No. ' + NumeroFactura + '\n' + productos)
+                                  sendMessage(from, productos)
                                   sendMessage(from, 'El total a pagar por su orden sería de: Q.' + price)
 
                                   sendMessage(from, '¿Desea continuar al proceso de pago? \n 1)Si \n 2)No')
@@ -339,6 +332,17 @@ const listenMessage = () => {
                                       if (mensaje[8] != undefined) {
                                         switch (mensaje[8].toLowerCase()) {
                                           case '1':
+                                            try {
+
+                                              pedido.numeroPedido = NumeroFactura;
+                                              sendMessage(from, '\n Recibo No. ' + NumeroFactura + '\n' + productos)
+                                              pedido.numeroPedido = NumeroFactura
+                                              AlmacenarCompra(from, pedido)
+                                              NumeroFactura++
+                                              console.log('database active')
+                                            } catch (err) {
+                                              console.log(err)
+                                            }
                                             sendMessage(from, 'Listo, para continuar por favor completa las instrucciones en el siguiente link:'
                                               + 'www.abc.com')
                                             sendMessage(from, 'Listo, Muchas gracias por completar tu orden, trabajaremos para enviarla a la brevedad 😊 ')
@@ -346,6 +350,17 @@ const listenMessage = () => {
                                             mensaje = []
                                             break;
                                           case '2':
+                                            try {
+
+                                              pedido.numeroPedido = NumeroFactura;
+                                              sendMessage(from, '\n Recibo No. ' + NumeroFactura + '\n' + productos)
+                                              pedido.numeroPedido = NumeroFactura
+                                              AlmacenarCompra(from, pedido)
+                                              NumeroFactura++
+                                              console.log('database active')
+                                            } catch (err) {
+                                              console.log(err)
+                                            }
                                             sendMessage(from, 'Listo, tu orden será enviada a la brevedad, te agradeceremos mucho si puedes tener cambio para pagar tu orden 😊')
                                             conversaciones[usuarioSeleccionado].message = []
                                             mensaje = []
@@ -429,9 +444,9 @@ const listenMessage = () => {
                       producto = 'Flautas.jpeg';
                     } else if (producTemp == 'Hot Dog') {
                       producto = 'Hot dogs.jpeg';
-                    } else if(producTemp == 'Pizza Personal'){
+                    } else if (producTemp == 'Pizza Personal') {
                       producto = 'Pizza.jpeg';
-                    }else{
+                    } else {
                       producto = 'Tacos.jpeg';
                     }
                     setTimeout(() => {
